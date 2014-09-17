@@ -131,7 +131,7 @@ function rzct_create_plugin() {
 
 	global $wp_filesystem;
 
-	// create the plugin directory
+	// create the theme directory
 	$themedir = $wp_filesystem->wp_themes_dir() . $_POST['rzct_slug'];
 
 	if ( ! $wp_filesystem->mkdir($themedir) ) {
@@ -139,7 +139,7 @@ function rzct_create_plugin() {
 		return $_POST;
 	}
 
-	// create the plugin header
+	// create the theme header
 
 	$header = <<<END
 /*
@@ -179,7 +179,7 @@ END;
 	</script>
 	<?php
 
-	/* translators: inline link to plugin editor */
+	/* translators: inline link to theme editor */
 	$message = sprintf(esc_html__('The new theme has been created and activated. You can %sgo to the editor%s if your browser does not redirect you.', 'rzct'), '<a href="'.$themeeditor.'">', '</a>');
 
 	add_settings_error('rzct', 'theme_active', $message, 'rzct', 'updated');
