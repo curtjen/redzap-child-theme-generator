@@ -1,4 +1,4 @@
-=== RZ Child Theme === 
+=== RedZap Child Theme Generator === 
 Contributors: voldemortensen, (add curtis)
 Tags: theme, creation, new, child-theme
 Requires at least: 3.0
