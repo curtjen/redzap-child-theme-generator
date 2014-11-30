@@ -33,7 +33,8 @@ function rzct_options_page() {
 			<tr valign='top'><th scope='row'>{$opts['description']}</th><td><input class='regular-text' type='text' name='rzct_description' value=''></td></tr>
 			<tr valign='top'><th scope='row'>{$opts['version']}</th><td><input class='regular-text' type='text' name='rzct_version' value=''></td></tr>
 			<tr valign='top'><th scope='row'>{$opts['author']}</th><td><input class='regular-text' type='text' name='rzct_author' value=''></td></tr>
-			<tr valign='top'><th scope='row'>{$opts['author_uri']}</th><td><input class='regular-text' type='text' name='rzct_author_uri' value=''></td></tr>";
+			<tr valign='top'><th scope='row'>{$opts['author_uri']}</th><td><input class='regular-text' type='text' name='rzct_author_uri' value=''></td></tr>
+			<tr valign='top'><th scope='row'>Create a functions.php?</th><td><input class='regular-tet' type='checkbox' name='rzct_function' value='true'></td</tr>";
 
 		?>
 		</table>
@@ -63,12 +64,12 @@ function rzct_create_theme() {
 	}
 
 	if ( empty($_POST['rzct_slug'] ) ) {
-		$_POST['rzct_slug'] = sanitize_title($_POST['rzct_name']);
+		$_POST['rzct_slug'] = sanitize_title( $_POST['rzct_name'] );
 	} else {
-		$_POST['rzct_slug'] = sanitize_title($_POST['rzct_slug']);
+		$_POST['rzct_slug'] = sanitize_title( $_POST['rzct_slug'] );
 	}
 
-	if ( file_exists(trailingslashit(WP_PLUGIN_DIR).$_POST['rzct_slug'] ) ) {
+	if ( file_exists(trailingslashit( WP_PLUGIN_DIR ) . $_POST['rzct_slug'] ) ) {
 		add_settings_error( 'rzct', 'existing_theme', esc_html__('That theme appears to already exist. Use a different slug or name.', 'rzct'), 'error' );
 		return $_POST;
 	}
@@ -79,7 +80,7 @@ function rzct_create_theme() {
 
 	// okay, let's see about getting credentials
 	$url = wp_nonce_url('tools.php?page=rzct','rzct_nonce');
-	if (false === ($creds = request_filesystem_credentials($url, $method, false, false, $form_fields) ) ) {
+	if (false === ($creds = request_filesystem_credentials( $url, $method, false, false, $form_fields ) ) ) {
 		return true;
 	}
 
@@ -96,14 +97,14 @@ function rzct_create_theme() {
 	// create the theme directory
 	$themedir = $wp_filesystem->wp_themes_dir() . $_POST['rzct_slug'];
 
-	if ( ! $wp_filesystem->mkdir($themedir) ) {
+	if ( ! $wp_filesystem->mkdir( $themedir ) ) {
 		add_settings_error( 'rzct', 'create_directory', esc_html__('Unable to create the theme directory.', 'rzct'), 'error' );
 		return $_POST;
 	}
 
 	// create the theme header
 
-	$header = <<<END
+	$themeheader = <<<END
 /*
 Theme Name: {$_POST['rzct_name']}
 Template: {$_POST['rzct_template']}
@@ -119,14 +120,26 @@ Author URI: {$_POST['rzct_author_uri']}
 --------------------------------- */
 END;
 
-	$themefile = trailingslashit($themedir).'style.css';
+	$themefile = trailingslashit( $themedir ) . 'style.css';
 
-	if ( ! $wp_filesystem->put_contents( $themefile, $header, FS_CHMOD_FILE) ) {
+	if ( ! $wp_filesystem->put_contents( $themefile, $themeheader, FS_CHMOD_FILE ) ) {
 		add_settings_error( 'rzct', 'create_file', esc_html__('Unable to create the theme file.', 'rzct'), 'error' );
 	}
+	$themeslug = $_POST['rzct_slug']. '/' . $_POST['rzct_slug'] . '.css';
+	$themeeditor = admin_url( 'theme-editor.php?file=style.css&theme=' . $_POST['rzct_slug'] );
 
-	$themeslug = $_POST['rzct_slug'].'/'.$_POST['rzct_slug'].'.css';
-	$themeeditor = admin_url('theme-editor.php?file=style.css&theme='.$_POST['rzct_slug']);
+	if( isset( $_POST['rzct_function'] ) && $_POST['rzct_function'] == true ) {
+		$functionsheader = <<<END
+<?php
+// This is where you put your custom functions.
+END;
+
+		$functionsfile = trailingslashit( $themedir ) . 'functions.php';
+
+		if ( ! $wp_filesystem->put_contents( $functionsfile, $functionsheader, FS_CHMOD_FILE ) ) {
+			add_settings_error( 'rzct', 'create_file', esc_html__('Unable to create functions.php.', 'rzct'), 'error' );
+		}
+	}
 
 	if ( null !== switch_theme( $_POST['rzct_template'], $_POST['rzct_slug']  ) ) {
 		add_settings_error( 'rzct', 'activate_theme', esc_html__('Unable to activate the new theme.', 'rzct'), 'error' );
